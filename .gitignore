@@ -1,20 +1,33 @@
+# Python
 __pycache__/
 *.pyc
-
-.venv/
-venv/
-env/
-
 .ipynb_checkpoints/
 
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Anaconda
+*.conda
+
+# VS Code
 .vscode/
 
+# Large/raw data
+data/raw/
 *.csv
 *.xlsx
+*.xls
 
+# Model files
 *.joblib
 *.pkl
-*.h5
-*.keras
 
-.env
+# Temporary files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
