@@ -1,387 +1,231 @@
-# Healthcare Provider Performance, Medicare Cost & Utilization Analytics with Machine Learning
 
-## VS Code project flow — matching the handwritten format
+# Healthcare Provider Utilization & Medicare Payment Analysis
 
-`# 🔗 Data Preparation
+## 📌 Project Overview
 
-The healthcare dataset is loaded and prepared before exploratory analysis and machine learning.
+This project analyzes healthcare provider utilization, Medicare payments, service activity, and beneficiary patterns using **Python, Machine Learning, and Power BI**.
 
-The data preparation workflow is:
+The objective is to transform healthcare provider data into actionable analytical insights and build a machine-learning classification workflow for categorizing provider utilization into:
+
+* Low Utilization
+* Medium Utilization
+* High Utilization
+
+The project combines:
+
+**Healthcare Data → Data Cleaning → EDA → Feature Engineering → Machine Learning → Model Evaluation → Prediction Export → Power BI Dashboard**
+
+---
+
+## 🎯 Business Problem
+
+Healthcare provider datasets contain large amounts of information about:
+
+* Provider characteristics
+* Provider type
+* State
+* Healthcare services
+* Medicare beneficiaries
+* Submitted charges
+* Allowed amounts
+* Medicare payments
+* Standardized payments
+
+Analyzing these variables manually can make it difficult to identify utilization patterns and payment relationships.
+
+### Business objective
+
+Develop an analytical and machine-learning solution that can:
+
+1. Analyze healthcare provider utilization.
+2. Identify high-volume services.
+3. Examine beneficiary and service relationships.
+4. Analyze Medicare payment patterns.
+5. Compare provider activity across states and provider types.
+6. Classify providers into utilization categories.
+7. Present analytical and ML insights through Power BI.
+
+---
+
+# 🔄 Project Workflow
 
 ```text
-Raw Healthcare Data
-        ↓
-Load Dataset
-        ↓
-Inspect Structure
-        ↓
-Validate Data Types
-        ↓
-Handle Missing Values
-        ↓
-Remove / Check Duplicates
-        ↓
-Validate Numeric Variables
-        ↓
-Check Outliers
-        ↓
-Prepare Analytical Dataset
+Business Problem
+       ↓
+Healthcare Provider Dataset
+       ↓
+Data Loading
+       ↓
+Data Cleaning & Validation
+       ↓
+Exploratory Data Analysis
+       ↓
+Feature Engineering
+       ↓
+Utilization Category
+       ↓
+Feature Preprocessing
+       ↓
+Train / Test Split
+       ↓
+Machine Learning
+       ↓
+Model Comparison
+       ↓
+Cross Validation
+       ↓
+Hyperparameter Tuning
+       ↓
+Final Model
+       ↓
+Feature Importance
+       ↓
+Prediction Export
+       ↓
+Power BI Dashboard
+       ↓
+Business Insights
 ```
-
-## Data Loading
-
-The raw healthcare provider dataset is loaded using Pandas.
-
-```python
-import pandas as pd
-
-df_raw = pd.read_csv(
-    "data/raw/healthcare_providers_capstone1.csv.csv"
-)
-```
-
-The initial dataset is inspected using:
-
-```python
-df_raw.shape
-df_raw.head()
-df_raw.info()
-df_raw.describe()
-```
-
-This provides an understanding of the number of observations, columns, data types, and numerical distributions.
 
 ---
 
-## Data Structure Validation
+# 📂 Dataset
 
-The following checks are performed:
-
-```python
-print("Rows:", df_raw.shape[0])
-print("Columns:", df_raw.shape[1])
-
-print(df_raw.dtypes)
-
-print(df_raw.isnull().sum())
-```
-
-These checks help identify:
-
-* Dataset dimensions.
-* Numerical and categorical columns.
-* Missing values.
-* Incorrect or unexpected data types.
-* Variables requiring preprocessing.
-
----
-
-## Missing Value Analysis
-
-Missing values are analyzed before model development.
-
-Example:
-
-```python
-missing_values = (
-    df_raw.isnull()
-    .sum()
-    .sort_values(ascending=False)
-)
-
-missing_percentage = (
-    df_raw.isnull()
-    .mean()
-    .mul(100)
-    .sort_values(ascending=False)
-)
-```
-
-The analysis identifies columns with substantial missingness.
-
-Examples of variables that may contain missing values include:
+The project uses the healthcare provider dataset:
 
 ```text
-Street Address 2
-Middle Initial
-Credentials
-First Name
-Gender
+data/raw/healthcare_providers_capstone1.csv.csv
 ```
 
-Missing-value treatment is performed according to the nature of each variable.
+The dataset contains provider-level and service-level healthcare information.
 
-For categorical variables, appropriate categorical handling or an `"Unknown"` category can be used where applicable.
+### Main variables
 
-For numerical variables, imputation or other appropriate treatment should be applied based on the modeling pipeline.
+| Category      | Variables                                 |
+| ------------- | ----------------------------------------- |
+| Provider      | Provider Type, Provider Name, Entity Type |
+| Geography     | State, Place of Service                   |
+| Service       | HCPCS Code, HCPCS Description             |
+| Utilization   | Number of Services                        |
+| Beneficiaries | Medicare Beneficiaries                    |
+| Financial     | Average Allowed Amount                    |
+| Financial     | Average Submitted Charge                  |
+| Financial     | Average Medicare Payment                  |
+| Financial     | Average Standardized Payment              |
+| Target        | Utilization Category                      |
 
 ---
 
-## Duplicate Analysis
+# 🧹 Data Cleaning & Preparation
 
-Duplicate records are checked before modeling.
+The data preparation process includes:
 
-```python
-duplicate_count = df_raw.duplicated().sum()
+* Dataset structure inspection
+* Data type validation
+* Missing-value analysis
+* Duplicate analysis
+* Numeric conversion
+* Outlier investigation
+* Preparation of the analytical dataset
 
-print("Duplicate rows:", duplicate_count)
-```
+### Important missing-value analysis
 
-Duplicates are reviewed before removal because healthcare claims/service datasets may legitimately contain repeated provider or service combinations.
+The project identified missing values in several provider attributes, including:
 
-Therefore, duplicate handling should be based on the business meaning of the record rather than automatically deleting every repeated row.
+* Street Address 2
+* Middle Initial
+* Credentials
+* First Name
+* Gender
 
----
-
-## Data Type Conversion
-
-Numerical healthcare variables are converted to appropriate numeric data types where required.
-
-Examples include:
-
-```text
-Number of Services
-Medicare Beneficiaries
-Distinct Beneficiary/Day Services
-Average Allowed Amount
-Average Submitted Charge
-Average Medicare Payment
-Average Standardized Payment
-```
-
-Example:
-
-```python
-numeric_columns = [
-    "Number of Services",
-    "Medicare Beneficiaries",
-    "Distinct Beneficiary/Day Services",
-    "Average Allowed Amount",
-    "Average Submitted Charge",
-    "Average Medicare Payment",
-    "Average Standardized Payment"
-]
-
-for col in numeric_columns:
-    df_raw[col] = pd.to_numeric(
-        df_raw[col],
-        errors="coerce"
-    )
-```
+Missing-value treatment is applied according to the type and business meaning of each variable.
 
 ---
 
 # 🔎 Exploratory Data Analysis
 
-The EDA stage examines provider utilization, service activity, beneficiaries, Medicare payments, geographic patterns, and relationships between numerical variables.
+EDA focuses on understanding healthcare utilization and Medicare payment patterns.
 
-The main areas of analysis are:
+### Provider Analysis
 
-```text
-1. Provider Analysis
-2. Service Analysis
-3. Beneficiary Analysis
-4. Medicare Payment Analysis
-5. Geographic Analysis
-6. Correlation Analysis
-7. Utilization Analysis
-```
+Analysis includes:
 
----
+* Provider Type
+* State
+* Place of Service
+* Entity Type
 
-## Provider Analysis
+### Service Analysis
 
-Provider activity is analyzed using:
+Analysis includes:
 
-```text
-Provider Type
-State
-Place of Service
-Entity Type
-```
+* HCPCS Code
+* HCPCS Description
+* Number of Services
+* Medicare Beneficiaries
 
-Key business questions include:
+### Medicare Payment Analysis
 
-* Which provider types have the highest service volume?
-* Which states have the highest provider activity?
-* Which provider categories serve the largest number of beneficiaries?
-* Which provider types have higher Medicare payments?
+Financial variables analyzed include:
 
----
+* Average Allowed Amount
+* Average Submitted Charge
+* Average Medicare Payment
+* Average Standardized Payment
 
-## Service Analysis
+### Beneficiary Analysis
 
-Healthcare service utilization is analyzed using:
-
-```text
-HCPCS Code
-HCPCS Description
-Number of Services
-Medicare Beneficiaries
-```
-
-The analysis identifies:
-
-* High-volume healthcare services.
-* Services associated with large beneficiary populations.
-* Frequently performed procedures.
-* Service-level utilization patterns.
-
----
-
-## Medicare Payment Analysis
-
-Medicare financial measures are analyzed using:
-
-```text
-Average Allowed Amount
-Average Submitted Charge
-Average Medicare Payment
-Average Standardized Payment
-```
-
-The analysis investigates:
-
-```text
-Submitted Charge
-        ↓
-Allowed Amount
-        ↓
-Medicare Payment
-        ↓
-Standardized Payment
-```
-
-This helps understand differences between submitted charges and Medicare payments.
-
----
-
-## Beneficiary Analysis
-
-Beneficiary-related variables are analyzed to understand provider utilization.
-
-Important variables include:
+Relationships between:
 
 ```text
 Medicare Beneficiaries
-Distinct Beneficiary/Day Services
+        ↓
 Number of Services
+        ↓
+Service Utilization
 ```
 
-Relationships such as:
+are analyzed to understand provider activity.
 
-```text
-Services vs Beneficiaries
-```
+### Geographic Analysis
 
-are examined to identify providers with relatively high service activity.
-
----
-
-## Geographic Analysis
-
-Provider utilization is analyzed across states.
-
-```text
-State
-  ↓
-Provider Count
-  ↓
-Service Volume
-  ↓
-Beneficiaries
-  ↓
-Medicare Payment
-```
-
-This allows geographic differences in healthcare utilization and Medicare spending to be explored.
+Provider utilization and Medicare payment patterns are examined across states.
 
 ---
 
 # 🛠️ Feature Engineering
 
-Feature engineering transforms the raw healthcare variables into useful analytical and machine-learning features.
+The project creates additional analytical features to describe provider utilization and payment intensity.
 
-The objective is to create variables that describe:
-
-```text
-Provider Activity
-Service Utilization
-Beneficiary Utilization
-Payment Intensity
-```
-
----
-
-## Payment Per Service
-
-A derived metric can be calculated as:
+### Payment Per Service
 
 ```text
-Payment Per Service
-=
-Medicare Payment / Number of Services
+Payment Per Service =
+Average Medicare Payment / Number of Services
 ```
 
-Example:
-
-```python
-df["Payment_Per_Service"] = (
-    df["Average Medicare Payment"] /
-    df["Number of Services"].replace(0, pd.NA)
-)
-```
-
----
-
-## Services Per Beneficiary
-
-A service utilization ratio can be calculated as:
+### Service Per Beneficiary
 
 ```text
-Service Per Beneficiary
-=
+Service Per Beneficiary =
 Number of Services / Medicare Beneficiaries
 ```
 
-Example:
-
-```python
-df["Service_Per_Beneficiary"] = (
-    df["Number of Services"] /
-    df["Medicare Beneficiaries"].replace(0, pd.NA)
-)
-```
-
-This provides an additional measure of provider service intensity.
+These derived variables help analyze service intensity and payment relationships.
 
 ---
 
-## Charge-to-Payment Relationship
+# 🎯 Machine Learning Problem
 
-Where appropriate, a charge/payment ratio can be derived to examine the relationship between submitted charges and Medicare payments.
+The machine-learning task is a **multi-class classification problem**.
 
-```text
-Charge-to-Payment Ratio
-=
-Submitted Charge / Medicare Payment
-```
-
-This variable should be interpreted carefully because the underlying amounts may represent averages rather than total financial values.
-
----
-
-# 🎯 Utilization Category
-
-The machine-learning problem is formulated as a classification task.
-
-The target variable is:
+### Target variable
 
 ```text
 Utilization_Category
 ```
 
-Providers are categorized into:
+### Classes
 
 ```text
 Low
@@ -389,148 +233,15 @@ Medium
 High
 ```
 
-Conceptually:
-
-```text
-Provider Utilization
-        ↓
-Utilization Measure
-        ↓
-Classification Threshold
-        ↓
-┌────────┬─────────┬────────┐
-│  Low   │ Medium  │  High  │
-└────────┴─────────┴────────┘
-```
-
-The exact threshold methodology should remain consistent with the methodology implemented in the project notebook.
+The model is designed to classify healthcare provider utilization based on provider, service, beneficiary, geographic, and payment-related characteristics.
 
 ---
 
-# 🧩 Feature Selection
+# 🧩 Machine Learning Features
 
-The machine-learning dataset uses provider, geographic, service, beneficiary, and payment characteristics.
+The project uses provider, geographic, service, beneficiary, and financial characteristics.
 
-The selected features should be documented according to the final model implementation.
-
-A representative feature structure is:
-
-```python
-features = [
-    "Provider Type",
-    "State",
-    "Place of Service",
-    "HCPCS Code",
-    "Drug Indicator",
-    "Medicare Beneficiaries",
-    "Average Allowed Amount",
-    "Average Submitted Charge",
-    "Average Medicare Payment"
-]
-```
-
-Target:
-
-```python
-target = "Utilization_Category"
-```
-
-The input matrix is:
-
-```python
-X = df[features]
-```
-
-and the target vector is:
-
-```python
-y = df[target]
-```
-
----
-
-# ✂️ Train / Test Split
-
-The dataset is divided into:
-
-```text
-80% → Training Data
-20% → Testing Data
-```
-
-Example:
-
-```python
-from sklearn.model_selection import train_test_split
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.20,
-    random_state=42,
-    stratify=y
-)
-```
-
-The test dataset remains unseen during model training and hyperparameter selection.
-
-`stratify=y` helps maintain the distribution of utilization categories between the training and testing datasets.
-
----
-
-# 📏 Feature Preprocessing
-
-The healthcare dataset contains both numerical and categorical variables.
-
-Therefore, separate preprocessing strategies are applied.
-
-## Numerical Features
-
-Numerical variables can be standardized using:
-
-```text
-StandardScaler
-```
-
-Examples:
-
-```text
-Medicare Beneficiaries
-Average Allowed Amount
-Average Submitted Charge
-Average Medicare Payment
-```
-
-Standardization follows:
-
-```text
-z = (x - μ) / σ
-```
-
-where:
-
-* `x` = original value
-* `μ` = training-data mean
-* `σ` = training-data standard deviation
-* `z` = standardized value
-
-The scaler is fitted only on training data.
-
-```python
-X_train_scaled = scaler.fit_transform(X_train_numeric)
-```
-
-The same transformation is applied to the test data:
-
-```python
-X_test_scaled = scaler.transform(X_test_numeric)
-```
-
----
-
-## Categorical Features
-
-Categorical variables such as:
+The documented feature set includes:
 
 ```text
 Provider Type
@@ -538,518 +249,468 @@ State
 Place of Service
 HCPCS Code
 Drug Indicator
+Medicare Beneficiaries
+Average Allowed Amount
+Average Submitted Charge
+Average Medicare Payment
 ```
 
-can be transformed using:
+Target:
 
 ```text
-OneHotEncoder
-```
-
-This converts categorical values into machine-readable numerical representations.
-
----
-
-# 🤖 Model Building and Comparison
-
-Because the target is:
-
-```text
-Low / Medium / High
-```
-
-the project uses classification algorithms.
-
-The models evaluated can include:
-
-```text
-1. Logistic Regression
-2. Decision Tree Classifier
-3. Random Forest Classifier
-4. Gradient Boosting Classifier
-```
-
-The models are trained using the processed training dataset.
-
-The purpose of model comparison is to evaluate different approaches using the same training/testing methodology.
-
----
-
-# 📊 Classification Evaluation Metrics
-
-The models are evaluated using multiple classification metrics.
-
-## Accuracy
-
-Accuracy measures the proportion of correctly classified observations.
-
-```text
-Accuracy
-=
-Correct Predictions
--------------------
-Total Predictions
+Utilization_Category
 ```
 
 ---
 
-## Precision
+# ✂️ Train / Test Split
 
-Precision measures how many observations predicted as a particular class were actually members of that class.
-
-```text
-Precision
-=
-True Positives
----------------------------
-True Positives + False Positives
-```
-
----
-
-## Recall
-
-Recall measures how many actual observations belonging to a class were correctly identified.
+The machine-learning workflow uses an **80/20 train-test split** with stratification.
 
 ```text
-Recall
-=
-True Positives
--------------------------
-True Positives + False Negatives
+80% → Training Data
+20% → Testing Data
 ```
 
----
-
-## F1-Score
-
-F1-score combines precision and recall.
-
-```text
-F1 =
-2 × Precision × Recall
-----------------------
-Precision + Recall
-```
-
-For a multi-class utilization problem, macro and/or weighted averages can be reported depending on the evaluation methodology.
-
----
-
-# 📋 Confusion Matrix
-
-A confusion matrix is used to examine classification errors.
-
-Conceptually:
-
-```text
-                 Predicted
-              Low Medium High
-
-Actual Low      ✓    •     •
-
-Actual Medium  •    ✓     •
-
-Actual High    •    •     ✓
-```
-
-The confusion matrix helps identify which utilization categories are being confused by the model.
-
----
-
-# 🎛️ Cross Validation and Hyperparameter Tuning
-
-After baseline model comparison, the selected classification model can be further optimized using cross-validation and hyperparameter tuning.
-
-The process is:
-
-```text
-Training Data
-      ↓
-Cross Validation
-      ↓
-Parameter Grid
-      ↓
-GridSearchCV
-      ↓
-Candidate Models
-      ↓
-Best Parameters
-      ↓
-Final Tuned Model
-```
-
-For example, a Random Forest classifier can be tuned using parameters such as:
+A fixed random state is used where supported:
 
 ```python
-param_grid = {
-    "n_estimators": [100, 200],
-    "max_depth": [None, 10, 20],
-    "min_samples_split": [2, 5],
-    "min_samples_leaf": [1, 2]
-}
+random_state = 42
 ```
 
-The exact parameter grid should match the implementation used in the project.
+The test data is kept separate from model training and tuning.
 
 ---
 
-# 🧪 Final Test Evaluation
+# 🤖 Machine Learning Models
 
-After hyperparameter tuning, the final model is evaluated against the previously unseen test dataset.
+The project includes baseline and tuned classification models.
 
-The evaluation includes:
+### Models used
+
+* Logistic Regression
+* Decision Tree Classifier
+* Random Forest Classifier
+
+The trained model artifacts are stored in the project's `models` directory.
+
+---
+
+# 🔧 Model Tuning
+
+The Random Forest model was further optimized using cross-validation and hyperparameter tuning.
+
+### Cross-validation
+
+The tuning workflow used:
 
 ```text
-Accuracy
-Precision
-Recall
-F1-Score
-Confusion Matrix
+5-fold Cross Validation
 ```
 
-The final results should be reported using the actual values produced by the project notebook.
+with the configured parameter search producing:
 
 ```text
-Final Model:
-[Actual Model]
-
-Accuracy:
-[Actual Result]
-
-Precision:
-[Actual Result]
-
-Recall:
-[Actual Result]
-
-F1-Score:
-[Actual Result]
+60 model fits
 ```
+
+### Best Random Forest configuration
+
+The best configuration identified in the project was:
+
+| Parameter         | Value |
+| ----------------- | ----: |
+| n_estimators      |   100 |
+| max_depth         |  None |
+| min_samples_split |     2 |
+
+The recorded best cross-validation F1 score was:
+
+```text
+Best CV F1 Score: 1.00
+```
+
+> **Important:** This is the recorded cross-validation result, not a claim about unseen real-world production performance. Because utilization is closely related to service-volume variables, the target definition and feature selection require a leakage check before interpreting this performance as production-ready.
+
+---
+
+# 📊 Model Evaluation
+
+The classification workflow evaluates:
+
+* Accuracy
+* Precision
+* Recall
+* F1-Score
+* Confusion Matrix
+
+The final test-set metric values should be taken directly from the final model execution rather than estimated or manually entered.
+
+### Current project status
+
+| Evaluation Item       | Status                   |
+| --------------------- | ------------------------ |
+| Accuracy              | Evaluated in ML workflow |
+| Precision             | Evaluated in ML workflow |
+| Recall                | Evaluated in ML workflow |
+| F1-Score              | Evaluated in ML workflow |
+| Confusion Matrix      | Created for ML analysis  |
+| Cross Validation      | Completed                |
+| Hyperparameter Tuning | Completed                |
+| Feature Importance    | Completed                |
 
 ---
 
 # 📈 Feature Importance
 
-Feature importance is used to understand which variables contribute to utilization classification.
+The trained tree-based model provides feature-importance information.
 
-For tree-based models, feature importance can be extracted from the trained model.
+The strongest recorded features include:
 
-Conceptually:
+| Feature                 | Importance |
+| ----------------------- | ---------: |
+| Number of Services      |     0.4403 |
+| Beneficiaries           |     0.2839 |
+| Payment Per Service     |     0.1165 |
+| Service Per Beneficiary |     0.0797 |
+
+These features account for a large portion of the recorded model importance.
+
+### Interpretation
+
+The model places substantial importance on:
+
+* Service volume
+* Beneficiary volume
+* Payment intensity
+* Service intensity per beneficiary
+
+These variables provide a connection between the machine-learning output and the healthcare utilization analysis.
+
+---
+
+# ⚠️ Target Leakage Validation
+
+Target leakage is an important consideration in this project.
+
+If `Utilization_Category` is created directly from `Number of Services`, then using `Number of Services` as a model input can make the prediction task circular.
+
+For example:
 
 ```text
-Feature Importance
-        ↓
 Number of Services
         ↓
-Medicare Beneficiaries
+Utilization Category
         ↓
-Payment Per Service
-        ↓
-Service Per Beneficiary
-        ↓
-Other Provider / Service Features
+Model also receives Number of Services
 ```
 
-The feature-importance analysis helps connect the machine-learning results with healthcare business questions.
+This can result in artificially strong model performance.
+
+Therefore, before presenting the model as production-ready, the project should clearly document:
+
+1. How `Utilization_Category` was created.
+2. Which variables were used to create the target.
+3. Which variables were provided to the model.
+4. Whether those variables would be available before prediction.
+5. Whether any input variable directly reveals the target.
+
+This validation is especially important because `Number of Services` has the highest recorded feature importance.
 
 ---
 
-# 💾 Model Artifact Export
+# 💾 Model Artifacts
 
-The trained preprocessing pipeline and final model can be serialized for reuse.
-
-Example artifacts:
+The project contains trained model artifacts, including:
 
 ```text
-data_preprocessor.pkl
-best_model_cv_tuned.joblib
-healthcare_provider_utilization_model.joblib
+models/
+├── best_model_cv_tuned.joblib
+├── decision_tree_baseline.joblib
+├── final_model.joblib
+├── logistic_regression_baseline.joblib
+└── random_forest_baseline.joblib
 ```
 
-These artifacts allow the trained machine-learning workflow to be reused without retraining the model from scratch.
+Processed datasets and ML outputs are maintained under:
+
+```text
+data/processed/
+```
+
+including:
+
+```text
+cleaned_data.csv
+features.csv
+feature_importance.csv
+raw_data_snapshot.csv
+X_train.csv
+X_test.csv
+y_train.csv
+y_test.csv
+```
 
 ---
 
-# 📤 Prediction Export
+# 📤 Prediction Output
 
-Predictions from the final model are exported for downstream analysis.
+The machine-learning workflow generates prediction data for downstream analysis.
 
-Example:
-
-```text
-healthcare_provider_predictions.csv
-```
-
-The prediction dataset can contain:
-
-```text
-Provider Information
-Service Information
-Beneficiary Information
-Payment Information
-Actual Utilization Category
-Predicted Utilization Category
-```
-
-Conceptually:
+The prediction workflow is:
 
 ```text
 Test Data
     ↓
 Preprocessing
     ↓
-Final Model
+Trained Model
     ↓
-Predicted Utilization
+Predicted Utilization Category
     ↓
-CSV Export
+Prediction Dataset
     ↓
 Power BI
 ```
+
+The prediction results are used to support the ML Insights page in Power BI.
 
 ---
 
 # 📊 Power BI Dashboard
 
-The prediction and analytical data are loaded into Power BI to create an interactive healthcare analytics dashboard.
+The Power BI dashboard converts the analytical and machine-learning results into interactive business intelligence.
 
-The dashboard focuses on:
+The project contains a Power BI file:
 
 ```text
-Provider Performance
-Service Utilization
-Medicare Cost Analysis
-Geographic Analysis
-Machine Learning Insights
+Healthcare Providers-capstone project .pbix
 ```
+
+The dashboard is organized around four major analytical areas.
 
 ---
 
-# 📌 Power BI Page 1 — Executive Overview
+## 📌 Page 1 — Executive Overview
 
-The Executive Overview provides high-level KPIs.
+The Executive Overview provides high-level healthcare KPIs.
 
-Recommended KPIs include:
+### Main KPIs
 
-```text
-Total Providers
-Total Services
-Total Beneficiaries
-Total Medicare Payment
-Average Payment
-High-Utilization Providers
-```
+* Total Providers
+* Total Services
+* Total Beneficiaries
+* Medicare Payment
+* Average Payment
 
-The page provides a high-level summary of provider utilization and Medicare payment activity.
+The page provides an overall view of provider utilization and Medicare payment activity.
 
 ---
 
-# 📌 Power BI Page 2 — Provider Performance
+## 📌 Page 2 — Provider Performance
 
-This page analyzes provider-level and provider-type performance.
+This page focuses on provider-level performance.
 
-Key dimensions include:
+### Analysis areas
 
-```text
-Provider
-Provider Type
-State
-Number of Services
-Beneficiaries
-Medicare Payment
-```
+* Provider Type
+* State
+* Provider Activity
+* Number of Services
+* Beneficiaries
+* Medicare Payment
 
-Recommended visuals:
+### Example analysis
 
 ```text
 Provider Type → Service Volume
 
 State → Provider Activity
 
-Provider → Medicare Payment
-
 Provider → Beneficiaries
-```
 
-Slicers can be provided for:
-
-```text
-State
-Provider Type
-Place of Service
+Provider → Medicare Payment
 ```
 
 ---
 
-# 📌 Power BI Page 3 — Medicare Cost & Service Analysis
+## 📌 Page 3 — Medicare Cost & Service Analysis
 
-This page focuses on the relationship between healthcare services, beneficiaries, and Medicare payments.
+This page examines relationships between services, beneficiaries, charges, and Medicare payments.
 
-Key measures include:
+### Key analysis
+
+* Service Volume
+* Medicare Beneficiaries
+* Average Allowed Amount
+* Average Submitted Charge
+* Average Medicare Payment
+* Average Standardized Payment
+* Service vs Payment
+* Beneficiaries vs Services
+* Submitted Charge vs Medicare Payment
+* Payment by Provider Type
+* Payment by State
+* HCPCS service analysis
+
+---
+
+## 📌 Page 4 — ML Insights
+
+The ML Insights page connects the machine-learning results with Power BI.
+
+### Main visuals
+
+* Utilization Category Distribution
+* Actual vs Predicted Utilization
+* Confusion Matrix
+* Feature Importance
+* High-Utilization Provider Analysis
+
+### Feature Importance
+
+The dashboard displays the important ML variables, including:
 
 ```text
 Number of Services
-Medicare Beneficiaries
-Average Allowed Amount
-Average Submitted Charge
-Average Medicare Payment
-Average Standardized Payment
+Beneficiaries
+Payment Per Service
+Service Per Beneficiary
 ```
 
-Recommended visuals include:
+This allows business users to connect model results with provider utilization patterns.
+
+---
+
+# 🏗️ Project Architecture
 
 ```text
-Service Volume vs Medicare Payment
-
-Beneficiaries vs Services
-
-Submitted Charge vs Medicare Payment
-
-Top HCPCS Services
-
-Medicare Payment by Provider Type
-
-Medicare Payment by State
+Healthcare Provider Dataset
+          ↓
+     Data Loading
+          ↓
+ Data Cleaning & Validation
+          ↓
+          EDA
+          ↓
+ Feature Engineering
+          ↓
+ Utilization Categorization
+          ↓
+ Feature Preprocessing
+          ↓
+    Train / Test Split
+          ↓
+   Model Development
+          ↓
+ Model Comparison
+          ↓
+ Cross Validation
+          ↓
+ Hyperparameter Tuning
+          ↓
+     Final Model
+          ↓
+ Feature Importance
+          ↓
+ Prediction Export
+          ↓
+      Power BI
+          ↓
+   Business Insights
 ```
 
 ---
 
-# 📌 Power BI Page 4 — ML Insights
+# 📁 Repository Structure
 
-The ML Insights page presents the output of the machine-learning model.
-
-Recommended components include:
+The current repository contains:
 
 ```text
-Utilization Category Distribution
-Actual vs Predicted Utilization
-Confusion Matrix
-Feature Importance
-High-Utilization Provider Analysis
-```
-
-The utilization distribution can be displayed as:
-
-```text
-Low
-Medium
-High
-```
-
-The actual-versus-predicted analysis can be used to identify correctly and incorrectly classified providers.
-
----
-
-# 🧱 Project Architecture
-
-```text
-                  ┌────────────────────────────┐
-                  │ Healthcare Provider CSV    │
-                  └──────────────┬─────────────┘
-                                 ↓
-                     Data Loading & Validation
-                                 ↓
-                          Data Cleaning
-                                 ↓
-                                EDA
-                                 ↓
-                       Feature Engineering
-                                 ↓
-                    Utilization Categorization
-                                 ↓
-                         Train / Test Split
-                                 ↓
-                      Feature Preprocessing
-                                 ↓
-              ┌──────────────────┴──────────────────┐
-              ↓                                     ↓
-      Logistic Regression                    Tree-Based Models
-              ↓                                     ↓
-              └──────────────────┬──────────────────┘
-                                 ↓
-                         Model Comparison
-                                 ↓
-                         Cross Validation
-                                 ↓
-                      Hyperparameter Tuning
-                                 ↓
-                           Final Model
-                                 ↓
-                      Test Set Evaluation
-                                 ↓
-                        Feature Importance
-                                 ↓
-                       Prediction Export
-                                 ↓
-                            Power BI
-                                 ↓
-                       Business Insights
-```
-
----
-
-# 📁 Recommended Project Structure
-
-```text
-Healthcare_Provider_Utilization/
+Healthcare_Capstone_Project/
 │
 ├── data/
-│   └── raw/
-│       └── healthcare_providers_capstone1.csv.csv
+├── reports/
+├── sql/
+├── src/
+├── App/
 │
-├── notebooks/
-│   └── healthcare_provider_utilization.ipynb
-│
-├── models/
-│   ├── healthcare_provider_utilization_model.joblib
-│   └── best_model_cv_tuned.joblib
-│
-├── outputs/
-│   ├── predictions/
-│   └── visualizations/
-│
-├── PowerBI/
-│   └── healthcare_provider_utilization.pbix
-│
+├── Healthcare Providers-capstone project .pbix
+├── PROBLEM_STATEMENT.md
+├── PROJECT_FLOW.txt
+├── create_ml_prediction.py
 ├── requirements.txt
-│
+├── .gitignore
 └── README.md
 ```
 
+The repository also contains the processed ML datasets and model-related project files under the appropriate project directories.
+
 ---
 
-# ⚙️ Installation
+# ⚙️ Technologies Used
+
+### Programming & Data Analysis
+
+* Python
+* Pandas
+* NumPy
+* Matplotlib
+* Seaborn
+
+### Machine Learning
+
+* Scikit-learn
+* Logistic Regression
+* Decision Tree
+* Random Forest
+* Cross-validation
+* Grid Search
+* Hyperparameter tuning
+* Classification metrics
+* Feature importance
+
+### Business Intelligence
+
+* Power BI
+* DAX
+* Power Query
+
+### Development Tools
+
+* VS Code
+* Jupyter
+* Anaconda
+* Git
+* GitHub
+
+---
+
+# ▶️ How to Run
 
 ## 1. Clone the Repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-
-cd Healthcare_Provider_Utilization
+git clone https://github.com/ankithag235/healthcare-provider-utilization-analysis.git
 ```
-
----
-
-## 2. Create a Virtual Environment
 
 ```bash
-python -m venv venv
+cd healthcare-provider-utilization-analysis
 ```
 
-### Windows
+## 2. Create an Environment
+
+Using Anaconda:
 
 ```bash
-venv\Scripts\activate
+conda create -n myproject python=3.11
 ```
 
-### Linux / macOS
+Activate:
 
 ```bash
-source venv/bin/activate
+conda activate myproject
 ```
-
----
 
 ## 3. Install Dependencies
 
@@ -1057,147 +718,39 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
----
+## 4. Open the Project
 
-# 📦 Main Dependencies
-
-The project uses:
+Open the project folder in VS Code.
 
 ```text
-pandas
-numpy
-matplotlib
-seaborn
-scikit-learn
-joblib
+Healthcare_Capstone_Project
 ```
 
-Additional libraries should be included in `requirements.txt` if they are used by the final notebook.
+## 5. Run the Python / ML Workflow
 
----
+Run the available Python scripts and notebooks in the project workflow.
 
-# ▶️ How to Run
-
-## Step 1 — Prepare the Dataset
-
-Place the healthcare provider dataset in:
+The general sequence is:
 
 ```text
-data/raw/
+Data Loading
+→ Cleaning
+→ EDA
+→ Feature Engineering
+→ ML
+→ Evaluation
+→ Prediction Export
 ```
 
----
-
-## Step 2 — Open the Notebook
+## 6. Open Power BI
 
 Open:
 
 ```text
-healthcare_provider_utilization.ipynb
+Healthcare Providers-capstone project .pbix
 ```
 
-using:
-
-```text
-Jupyter Notebook
-JupyterLab
-VS Code
-```
-
----
-
-## Step 3 — Verify Dataset Path
-
-Update the path if required:
-
-```python
-df_raw = pd.read_csv(
-    "data/raw/healthcare_providers_capstone1.csv.csv"
-)
-```
-
----
-
-## Step 4 — Run the Notebook
-
-Run the sections in the following order:
-
-```text
-1. Problem Statement
-2. Dataset & Data Dictionary
-3. Data Loading
-4. Data Cleaning & Validation
-5. Exploratory Data Analysis
-6. Feature Engineering
-7. Utilization Category Creation
-8. Feature Preprocessing
-9. Train / Test Split
-10. Model Building & Comparison
-11. Cross Validation
-12. Hyperparameter Tuning
-13. Final Test Evaluation
-14. Feature Importance
-15. Prediction Export
-16. Power BI Preparation
-```
-
----
-
-# 🔮 Using the Saved Model for New Predictions
-
-The saved preprocessing object and trained model can be used for new provider observations.
-
-Conceptually:
-
-```python
-import joblib
-
-preprocessor = joblib.load(
-    "data_preprocessor.pkl"
-)
-
-model = joblib.load(
-    "best_model_cv_tuned.joblib"
-)
-
-new_data_processed = preprocessor.transform(
-    new_data
-)
-
-predictions = model.predict(
-    new_data_processed
-)
-```
-
-The new data must contain the same feature columns and compatible preprocessing structure used during model training.
-
----
-
-# ⚠️ Important Model Validation Note
-
-The healthcare dataset contains variables that may be directly or indirectly related to the utilization target.
-
-Therefore, a target-leakage audit should be performed before treating the final model performance as production-ready.
-
-The validation process should ask:
-
-```text
-Input Feature
-      ↓
-Was it available before prediction?
-      ↓
-Was it independently measured?
-      ↓
-Was it used to create Utilization_Category?
-      ↓
-Could it directly reveal the target?
-      ↓
-No Target Leakage?
-```
-
-For example, if `Utilization_Category` is created directly from `Number of Services`, then using `Number of Services` as an input feature can introduce a form of target leakage or make the prediction task circular, depending on the business definition of the target.
-
-Therefore, the target-generation methodology and feature-selection methodology should be documented together.
+Then refresh the relevant data sources if required.
 
 ---
 
@@ -1211,138 +764,97 @@ random_state = 42
 
 where supported.
 
-This provides reproducible train/test splits and reproducible model experiments when the same dataset, preprocessing configuration, model parameters, and software environment are used.
+This helps reproduce the train/test split and model experiments when the same dataset, preprocessing, parameters, and environment are used.
 
 ---
 
-# 🧠 Key Machine Learning Concepts Demonstrated
+# 💡 Business Insights Supported by the Project
 
-This project demonstrates:
+The completed analytical workflow supports investigation of:
 
-* Data loading and validation
-* Data cleaning
-* Missing-value analysis
-* Duplicate analysis
-* Exploratory Data Analysis
-* GroupBy aggregation
-* Feature engineering
-* Utilization classification
-* Train/test splitting
-* Feature preprocessing
-* Standardization
-* Categorical encoding
-* Classification
-* Model comparison
-* Accuracy
-* Precision
-* Recall
-* F1-score
-* Confusion matrix
-* Cross-validation
-* Grid Search
-* Hyperparameter tuning
-* Feature importance
-* Model serialization
-* Prediction export
-* Power BI visualization
-* Business intelligence reporting
+1. Provider utilization patterns.
+2. High-volume healthcare services.
+3. Beneficiary and service relationships.
+4. Medicare payment patterns.
+5. Differences in provider activity across states.
+6. Provider-type utilization patterns.
+7. Payment intensity.
+8. Service intensity per beneficiary.
+9. High-utilization provider groups.
+10. Machine-learning drivers of utilization classification.
 
 ---
 
-# 📌 Final Results
+# ⚠️ Limitations
 
-The final model results should be reported from the actual project execution.
+The project should be interpreted within the limitations of the available healthcare dataset.
 
-```text
-Final Model:
-[Actual Best Model]
+Important considerations include:
 
-Best Hyperparameters:
-[Actual Parameters]
-
-Accuracy:
-[Actual Result]
-
-Precision:
-[Actual Result]
-
-Recall:
-[Actual Result]
-
-F1-Score:
-[Actual Result]
-```
-
-The results should be interpreted together with the target-leakage and validation analysis.
-
----
-
-# 📊 Business Value
-
-The solution can support healthcare analytics by helping users:
-
-* Identify high-utilization providers.
-* Analyze service utilization patterns.
-* Compare provider activity across states.
-* Analyze Medicare payment patterns.
-* Identify high-volume healthcare services.
-* Examine beneficiary utilization.
-* Understand service-to-payment relationships.
-* Investigate utilization drivers.
-* Support provider performance analysis.
-* Provide interactive healthcare intelligence through Power BI.
+* The dataset represents historical healthcare provider/service information.
+* Utilization categories depend on the target-definition methodology.
+* Some provider attributes contain missing values.
+* Model performance must be interpreted in the context of the target definition.
+* Target leakage must be ruled out before treating the ML model as production-ready.
+* Cross-validation performance should not be treated as equivalent to real-world deployment performance.
 
 ---
 
 # 🚀 Future Improvements
 
-Potential improvements include:
+Potential next steps include:
 
-1. Perform a formal target-leakage audit.
-2. Validate utilization-category thresholds.
-3. Add additional classification algorithms.
-4. Perform systematic hyperparameter optimization.
-5. Add class-specific performance analysis.
-6. Use SHAP or permutation importance for interpretability.
-7. Add model calibration where appropriate.
-8. Add automated model retraining.
-9. Deploy the trained model through a REST API.
-10. Create an automated prediction pipeline.
-11. Connect Power BI to a continuously updated prediction source.
-12. Add automated alerts for high-utilization providers.
-13. Incorporate additional temporal or longitudinal provider information where available.
-14. Monitor model performance after deployment.
+1. Complete a formal target-leakage audit.
+2. Refine utilization-category definitions if required.
+3. Evaluate the final model on a leakage-safe feature set.
+4. Add class-specific performance analysis.
+5. Add additional model comparison where appropriate.
+6. Improve Power BI documentation with dashboard screenshots.
+7. Add model monitoring if the solution is later deployed.
+8. Validate the workflow on newer healthcare data.
 
 ---
 
-# 👨‍💻 Project Summary
+# 📌 Final Project Outcome
 
-This project demonstrates an end-to-end machine learning workflow for **Healthcare Provider Utilization & Medicare Payment Analysis**.
-
-The system prepares healthcare provider and Medicare service data, performs exploratory analysis, engineers utilization and payment-related features, classifies providers into utilization categories, compares multiple classification algorithms, performs cross-validation and hyperparameter tuning, evaluates the final model on unseen data, extracts model insights, exports predictions, and presents the results through an interactive Power BI dashboard.
-
-The complete pipeline is:
+This project demonstrates an end-to-end healthcare analytics workflow:
 
 ```text
-Raw Healthcare Data
-        ↓
-Data Preparation
-        ↓
-Exploratory Data Analysis
-        ↓
+Healthcare Data
+      ↓
+Python Data Analysis
+      ↓
+Data Cleaning
+      ↓
+EDA
+      ↓
 Feature Engineering
-        ↓
-Utilization Classification
-        ↓
+      ↓
 Machine Learning
-        ↓
+      ↓
 Model Evaluation
-        ↓
-Prediction
-        ↓
+      ↓
+Feature Importance
+      ↓
+Prediction Output
+      ↓
 Power BI
-        ↓
-Business Intelligence
+      ↓
+Healthcare Business Insights
 ```
 
-The project combines **Python, Pandas, NumPy, Scikit-learn, Machine Learning, model evaluation, feature importance, and Power BI** to create an end-to-end healthcare analytics solution.
+The project combines **data analytics, machine learning, and business intelligence** to analyze healthcare provider utilization and Medicare payment patterns.
+
+---
+
+## 👩‍💻 Author
+
+**Ankitha G**
+
+Data Analytics & Data Science with Gen AI
+
+GitHub:
+https://github.com/ankithag235
+
+LinkedIn:
+https://linkedin.com/in/g-ankitha-222838279
